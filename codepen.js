@@ -1,3 +1,9 @@
+rhino3dm().then(function(m) {
+  rhino = m; // global
+  console.log("rhino3dm loaded!");
+  run();
+});
+
 var _a = null;
 var _b = null;
 
