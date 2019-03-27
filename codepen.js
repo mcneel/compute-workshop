@@ -9,6 +9,8 @@ rhino3dm().then(function(m) {
   run();
 });
 
+RhinoCompute.authToken = RhinoCompute.getAuthToken(true);
+
 function run() {
   let canvas = getCanvas();
   canvas.addEventListener('mousedown', onMouseDown);
@@ -18,6 +20,14 @@ function run() {
 }
 
 function getCanvas() { return document.getElementById('canvas'); }
+
+function getXY(evt) {
+  let canvas = getCanvas();
+  let rect = canvas.getBoundingClientRect();
+  let x = evt.clientX - rect.left;
+  let y = evt.clientY - rect.top;
+  return [x,y];
+}
 
 function onMouseDown(evt) {
   let [x,y] = getXY(evt);
@@ -40,10 +50,19 @@ function onMouseMove(evt) {
   }
 }
 
-function onKeyDown(event) {
-  if (event.keyCode !== 13) { // 13 == Enter
-    return;
+async function onKeyDown(evt) {
+  switch(evt.key) {
+    case "Enter":
+      save();
+      break;
+    case "u":
+      await createBooleanUnion();
+      break;
   }
+  draw();
+}
+
+function save() {
   if (model.points.count < 4) { // 3 pts (min.) + next pt
     console.error('Not enough points!');
   } else {
@@ -55,15 +74,6 @@ function onKeyDown(event) {
     model.curves.push(rhino.NurbsCurve.create(true, degree, model.points));
   }
   model.points = new rhino.Point3dList();
-  draw();
-}
-
-function getXY(evt) {
-  let canvas = getCanvas();
-  let rect = canvas.getBoundingClientRect();
-  let x = evt.clientX - rect.left;
-  let y = evt.clientY - rect.top;
-  return [x,y];
 }
 
 function draw() {
@@ -102,7 +112,7 @@ function drawNurbsCurve(ctx, curve) {
   let [t0,t1] = curve.domain;
   let [x,y,z] = curve.pointAt(t0);
   ctx.moveTo(x,y);
-  for(j=1; j<=divisions; j++) {
+  for(let j=1; j<=divisions; j++) {
     let t = t0 + j / divisions * (t1-t0);
     let [x,y,z] = curve.pointAt(t);
     ctx.lineTo(x,y);
@@ -114,7 +124,7 @@ function drawControlPolygon(ctx, points) {
   ctx.strokestyle = 'darkgray';
   ctx.setLineDash([4,4]);
   ctx.beginPath();
-  for(i=0; i<points.count; i++) {
+  for(let i=0; i<points.count; i++) {
     let [x,y,z] = points.get(i);
     if(0==i)
       ctx.moveTo(x, y);
@@ -130,5 +140,21 @@ function drawControlPolygon(ctx, points) {
     let [x,y,z] = points.get(i);
     ctx.fillRect(x-1,y-1, 3, 3);
     ctx.strokeRect(x-2, y-2, 5, 5);
+  }
+}
+
+async function createBooleanUnion() {
+  let unionCurves = [];
+  try {
+    let res = await RhinoCompute.Curve.createBooleanUnion(model.curves);
+    for (let i=0; i<res.length; i++) {
+      unionCurves.push(rhino.CommonObject.decode(res[i]));
+    }
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+  if (unionCurves.length > 0) {
+    model.curves = unionCurves;
   }
 }
