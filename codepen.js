@@ -1,19 +1,63 @@
+
+// global variables
+var rhino = null;
+var model = {
+  // saved lines
+  lines: [],
+  // new line
+  from: null,
+  to: null
+};
+
+// wait for the rhino3dm web assembly to load asynchronously
 rhino3dm().then(function(m) {
   rhino = m; // global
-  console.log("rhino3dm loaded!");
   run();
 });
 
-var _a = null;
-var _b = null;
-
+// initialise
 function run() {
   let canvas = getCanvas();
   canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
 }
 
-function getCanvas() { return document.getElementById('canvas'); }
+/* * * * * * * * * * * * * * * *  interaction   * * * * * * * * * * * * * * * */
 
+// handles mouse down events
+function onMouseDown(evt) {
+  let [x,y] = getXY(evt);
+  if (model.from === null) {
+    model.from = [x, y, 0];
+  } else {
+    line = new rhino.Line(model.from, [x, y, 0]);
+    model.lines.push(line);
+    // clear
+    model.from = null;
+    model.to = null;
+  }
+  draw();
+}
+
+// handles mouse move events
+function onMouseMove(evt) {
+  // if the first click has been set, have the second point follow the mouse
+  // until it is clicked
+  if (model.from !== null) {
+    let [x,y] = getXY(evt);
+    model.to = [x, y, 0];
+    draw();
+  }
+}
+
+/* * * * * * * * * * * * * * * * *  helpers   * * * * * * * * * * * * * * * * */
+
+// gets the canvas
+function getCanvas() {
+  return document.getElementById('canvas');
+}
+
+// gets the [x, y] location of the mouse on the canvas
 function getXY(evt) {
   let canvas = getCanvas();
   let rect = canvas.getBoundingClientRect();
@@ -22,41 +66,34 @@ function getXY(evt) {
   return [x,y];
 }
 
-function onMouseDown(evt) {
-  if(evt.buttons==2) {
-    // right mouse button down... start over
-    clear();
-    _a = null;
-    _b = null;
-  } else {
-    let [x,y] = getXY(evt);
-    if (_a == null) {
-      _a = [x, y, 0]
-    } else {
-      _b = [x, y, 0]
-      draw()
-      _a = null;
-      _b = null;
-    }
+/* * * * * * * * * * * * * * * * *  drawing   * * * * * * * * * * * * * * * * */
+
+// clears the canvas and draws the model
+function draw() {
+  // get canvas' 2d context
+  let canvas = getCanvas();
+  let ctx = canvas.getContext('2d');
+
+  // clear
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  let lines = model.lines;
+
+  // create a new line on the fly from model.from and model.to
+  if (model.from !== null && model.to !== null) {
+    lines = model.lines.concat([new rhino.Line(model.from, model.to)]);
+  }
+
+  // draw all the lines
+  for(i=0; i<lines.length; i++) {
+    drawLine(ctx, lines[i]);
   }
 }
 
-function clear() {
-  let canvas = getCanvas();
-  let ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-function draw() {
-  drawLine(_a, _b)
-}
-
-function drawLine(a, b) {
-  let canvas = getCanvas();
-  let ctx = canvas.getContext('2d');
+// draws a line
+function drawLine(ctx, line) {
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'black';
-  var line = new rhino.Line(a, b);
   ctx.beginPath();
   ctx.moveTo(line.from[0], line.from[1]);
   ctx.lineTo(line.to[0], line.to[1]);
