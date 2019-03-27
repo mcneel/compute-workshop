@@ -1,6 +1,6 @@
 var rhino = null;
 var model = {
-  polylines: [],
+  curves: [],
   points: null,
 };
 
@@ -26,7 +26,6 @@ function onMouseDown(evt) {
     model.points.set(index, [x, y, 0])
   } else {
     model.points.add(x, y, 0);
-    // model.points.add(x, y, 0);
   }
   model.points.add(x, y, 0);
   draw();
@@ -45,32 +44,17 @@ function onKeyDown(event) {
   if (event.keyCode !== 13) { // 13 == Enter
     return;
   }
-  // console.log(model.points.count);
   if (model.points.count < 4) { // 3 pts (min.) + next pt
     console.error('Not enough points!');
   } else {
     let index = model.points.count - 1;
     model.points.removeAt(index);
-    let polyline = new rhino.Polyline(model.points.count);
-    for (let i=0; i<model.points.count; i++) {
-      let [x, y, z] = model.points.get(i);
-      polyline.add(x, y, z);
-    }
-    // close
-    let [x, y, z] = model.points.get(0);
-    polyline.add(x, y, z);
-    // store new polyline
-    model.polylines.push(polyline);
+    let degree = model.points.count - 1;
+    if (degree > 3)
+      degree = 3;
+    model.curves.push(rhino.NurbsCurve.create(true, degree, model.points));
   }
   model.points = new rhino.Point3dList();
-
-  // debug
-  // let lengths = [];
-  // for (let i=0; i<model.polylines.length; i++) {
-  //   lengths.push(model.polylines[i].count);
-  // }
-  // console.log(lengths);
-
   draw();
 }
 
@@ -85,34 +69,66 @@ function getXY(evt) {
 function draw() {
   let canvas = getCanvas();
   let ctx = canvas.getContext('2d');
-  clear(ctx);
-  for (let i=0; i<model.polylines.length; i++) {
-    drawPolyline(ctx, model.polylines[i]);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i=0; i<model.curves.length; i++) {
+    drawNurbsCurve(ctx, model.curves[i]);
   }
   if (model.points !== null && model.points.count > 0) {
-    drawPolyline(ctx, model.points);
+    // close
+    // let points = clonePoint3dList(model.points);
+    // let [x, y, z] = points.get(0);
+    // points.add(x, y, z);
+    let degree = model.points.count - 1;
+    if (degree > 3)
+      degree = 3;
+    let curve = rhino.NurbsCurve.create(true, degree, model.points);
+    drawNurbsCurve(ctx, curve);
+    // let dup = curve.clone();
+    // console.log(curve.points());
+    drawControlPolygon(ctx, curve.points());
+    curve.delete();
   }
 }
 
-function drawPolyline(ctx, points) {
+function drawNurbsCurve(ctx, curve) {
+  // if( controlPoints.count<2 )
+  //   return;
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'black';
+
+  const divisions = 200; // TODO
   ctx.beginPath();
-  for (let i=0; i<points.count; i++) {
-    let [x, y, z] = points.get(i);
-    if (0 === i)
-      ctx.moveTo(x, y);
-    else
-      ctx.lineTo(x, y);
-  }
-  // draw all polylines closed
-  if (points.get(0) !== points.get(points.count - 1)) {
-    let [x, y, z] = points.get(0);
-    ctx.lineTo(x, y, 0);
+
+  let [t0,t1] = curve.domain;
+  let [x,y,z] = curve.pointAt(t0);
+  ctx.moveTo(x,y);
+  for(j=1; j<=divisions; j++) {
+    let t = t0 + j / divisions * (t1-t0);
+    let [x,y,z] = curve.pointAt(t);
+    ctx.lineTo(x,y);
   }
   ctx.stroke();
 }
 
-function clear(ctx) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawControlPolygon(ctx, points) {
+  ctx.strokestyle = 'darkgray';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  for(i=0; i<points.count; i++) {
+    let [x,y,z] = points.get(i);
+    if(0==i)
+      ctx.moveTo(x, y);
+    else
+      ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'white';
+  ctx.strokeStyle = 'black';
+  for(i=0; i<points.count; i++) {
+    let [x,y,z] = points.get(i);
+    ctx.fillRect(x-1,y-1, 3, 3);
+    ctx.strokeRect(x-2, y-2, 5, 5);
+  }
 }
