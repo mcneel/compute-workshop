@@ -1,6 +1,5 @@
 """
-AEC Tech 2019 Workshop
-Step 1: Create two curves and save them to a 3dm file
+Create two curves and save them to a 3dm file
 """
 
 import rhino3dm
@@ -18,5 +17,5 @@ curve2 = circle.ToNurbsCurve()
 model = rhino3dm.File3dm()
 model.Objects.AddCurve(curve1)
 model.Objects.AddCurve(curve2)
-model.Write('aec_workshop_step1.3dm')
+model.Write('workshop_step1.3dm')
 
