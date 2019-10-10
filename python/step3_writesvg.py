@@ -1,6 +1,5 @@
 """
-AEC Tech 2019 Workshop
-Step 3: Output to svg instead of 3dm
+Output to svg instead of 3dm
 """
 
 import rhino3dm
@@ -41,7 +40,7 @@ def curve_to_svg(curve, svg, scale):
 
 
 scale_factor = 50
-dwg = svgwrite.Drawing('aec_workshop_step3.svg')
+dwg = svgwrite.Drawing('workshop_step3.svg')
 curve_to_svg(curve1, dwg, scale_factor)
 curve_to_svg(curve2, dwg, scale_factor)
 
