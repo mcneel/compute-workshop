@@ -1,6 +1,5 @@
 """
-AEC Tech 2019 Workshop
-Step 2: Use compute.rhino3d to find curve intersections
+Use compute.rhino3d to find curve intersections
 """
 
 import rhino3dm
@@ -32,4 +31,4 @@ for intersection in intersection_results:
     z = intersection["PointA"]["Z"]
     model.Objects.AddPoint(x, y, z)
 
-model.Write('aec_workshop_step2.3dm')
+model.Write('workshop_step2.3dm')
