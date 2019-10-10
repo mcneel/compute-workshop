@@ -1,6 +1,5 @@
 """
-AEC Tech 2019 Workshop
-Step 4: Offset and trim
+Offset and trim
 """
 
 import rhino3dm
@@ -32,4 +31,4 @@ for intersection in intersection_points:
     z = intersection["Z"]
     model.Objects.AddPoint(x, y, z)
 
-model.Write('aec_workshop_step4.3dm')
+model.Write('workshop_step4.3dm')
