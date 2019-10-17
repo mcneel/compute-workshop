@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <script src="compute.rhino3d.js"></script>
+        <!-- <script src="rhino3dm.js"></script> -->
+        <script>
+            RhinoCompute.url = 'https://staging.compute.rhino3d.com/'
+            RhinoCompute.authToken = RhinoCompute.getAuthToken()
+
+            var tree = new RhinoCompute.Grasshopper.DataTree('RH_IN:106:0001')
+            tree.append([0], ['Lorem ipsum dolor sit amet'])
+            var trees = [tree]
+
+            fetch('leland.ghx')
+            .then(response => response.text())
+            .then(definition => RhinoCompute.Grasshopper.evaluateDefinition(definition, [tree]))
+            .then(res => {
+                var text = res.values[0].InnerTree['{ 0; }'][0].data
+                document.getElementById('output').innerHTML = text
+            })
+            .catch(err => { throw err })
+        </script>
+        <div id='output'>Loading...</div>
+    </head>
+</html>
