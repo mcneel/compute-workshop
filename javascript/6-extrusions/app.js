@@ -4,70 +4,23 @@ let args = {
     values : []
 };
 
+let definition = null;
+
 // get slider values
 let count = document.getElementById("count").value;
 let radius = document.getElementById("radius").value;
 let length = document.getElementById("length").value;
 
-let param1 = {
-    ParamName : "RH_IN:201:Length",
-    InnerTree : {
-        "{ 0; }": [
-            {
-                "type":"",
-                "data": length
-            }
-        ]
-    },
-    Keys : [
-        "{ 0; }"
-    ],
-    Values : [
-        {
-        "type":"",
-        "data": length
-    }]
-};
+console.log(count);
 
-let param2 = {
-    ParamName : "RH_IN:201:Radius",
-    InnerTree : {
-        "{ 0; }": [
-            {
-                "type":"",
-                "data": radius
-            }
-        ]
-    },
-    Keys : [
-        "{ 0; }"
-    ],
-    Values : [
-        {
-        "type":"",
-        "data": radius
-    }]
-};
+let param1 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Length");
+param1.append([0], [length]);
 
-let param3 = {
-    ParamName : "RH_IN:201:Count",
-    InnerTree : {
-        "{ 0; }": [
-            {
-                "type":"",
-                "data": count
-            }
-        ]
-    },
-    Keys : [
-        "{ 0; }"
-    ],
-    Values : [
-        {
-        "type":"",
-        "data": count
-    }]
-};
+let param2 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Radius");
+param2.append([0], [radius]);
+
+let param3 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Count");
+param3.append([0], [count]);
 
 
 
@@ -84,7 +37,8 @@ rhino3dm().then(function(m) {
     fetch('BranchNodeRnd.ghx')
     .then(response => response.text())
     .then(text => {
-        args.algo = btoa(text);
+        definition = text
+        // args.algo = btoa(text);
         init();
         compute();
     });
@@ -92,16 +46,22 @@ rhino3dm().then(function(m) {
 
 function compute(){
 
+    console.log('compute()')
+    // console.log(param3.data.InnerTree)
+
     // clear values
-    args.values = [];
+    trees = [];
 
-    args.values.push(param1);
-    args.values.push(param2);
-    args.values.push(param3);
+    trees.push(param1);
+    trees.push(param2);
+    trees.push(param3);
 
-    // console.log(args);
+    // trees = [param1, param2, param3]
 
-    RhinoCompute.computeFetch("grasshopper", args).then(result => {
+    // console.log(param3);
+
+    RhinoCompute.Grasshopper.evaluateDefinition(definition, trees).then(result => {
+    // RhinoCompute.computeFetch("grasshopper", args).then(result => {
         console.log(result);
 
         let data = JSON.parse(result.values[0].InnerTree['{ 0; }'][0].data);
@@ -128,66 +88,18 @@ function onSliderChange(){
     radius = document.getElementById("radius").value;
     length = document.getElementById("length").value;
 
-    param1 = {
-        ParamName : "RH_IN:201:Length",
-        InnerTree : {
-            "{ 0; }": [
-                {
-                    "type":"",
-                    "data": length
-                }
-            ]
-        },
-        Keys : [
-            "{ 0; }"
-        ],
-        Values : [
-            {
-            "type":"",
-            "data": length
-        }]
-    };
+    // console.log(count);
 
-    param2 = {
-        ParamName : "RH_IN:201:Radius",
-        InnerTree : {
-            "{ 0; }": [
-                {
-                    "type":"",
-                    "data": radius
-                }
-            ]
-        },
-        Keys : [
-            "{ 0; }"
-        ],
-        Values : [
-            {
-            "type":"",
-            "data": radius
-        }]
-    };
+    param1 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Length");
+    param1.append([0], [length]);
 
+    param2 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Radius");
+    param2.append([0], [radius]);
 
-    param3 = {
-        ParamName : "RH_IN:201:Count",
-        InnerTree : {
-            "{ 0; }": [
-                {
-                    "type":"",
-                    "data": count
-                }
-            ]
-        },
-        Keys : [
-            "{ 0; }"
-        ],
-        Values : [
-            {
-            "type":"",
-            "data": count
-        }]
-    };
+    param3 = new RhinoCompute.Grasshopper.DataTree("RH_IN:201:Count");
+    param3.append([0], [count]);
+
+    // console.log(param3.data.InnerTree)
 
     compute();
 

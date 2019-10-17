@@ -3662,7 +3662,10 @@ var RhinoCompute = {
             //     args['pointer'] = definition;
             // } else {
                 // console.log(definition)
-                args['algo'] = btoa(definition);
+            if (definition.charCodeAt(0) === 0xFEFF) {
+                definition = definition.slice(1);
+            }
+            args['algo'] = btoa(definition);
             // }
 
             var values = [];
