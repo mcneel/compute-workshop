@@ -24,7 +24,7 @@ param3.append([0], [count]);
 
 
 
-rhino3dm().then(function(m) {
+rhino3dm().then(async m => {
     console.log('Loaded rhino3dm.');
     rhino = m; // global
 
@@ -34,14 +34,21 @@ rhino3dm().then(function(m) {
     // if you have a different Rhino.Compute server, add the URL here:
     //RhinoCompute.url = "";
 
-    fetch('BranchNodeRnd.ghx')
-    .then(response => response.text())
-    .then(text => {
-        definition = text
-        // args.algo = btoa(text);
-        init();
-        compute();
-    });
+    // load a .gh (binary) file!
+    let url = 'BranchNodeRnd.gh';
+    let res = await fetch(url);
+    let buffer = await res.arrayBuffer();
+    let arr = new Uint8Array(buffer);
+    definition = arr;
+
+    // try this instead to load a .ghx (xml) file!
+    // let url = 'BranchNodeRnd.ghx';
+    // let res = await fetch(url);
+    // let text = await res.text();
+    // definition = text;
+
+    init();
+    compute();
 });
 
 function compute(){
