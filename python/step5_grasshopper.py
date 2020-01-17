@@ -3,7 +3,7 @@ import compute_rhino3d.Grasshopper as gh
 import rhino3dm
 import json
 
-compute_rhino3d.Util.url = 'http://localhost:8081/'
+compute_rhino3d.Util.authToken = ADD_TOKEN_HERE
 
 pt1 = rhino3dm.Point3d(0, 0, 0)
 circle = rhino3dm.Circle(pt1, 5)
@@ -20,6 +20,15 @@ rotate_tree.Append([0], [angle])
 trees = [curve_tree, rotate_tree]
 
 output = gh.EvaluateDefinition('workshop_step5.ghx', trees)
-print(output)
+# print(output)
 
-# TODO: write output lines to 3dm for checking 
+# decode results
+branch = output['values'][0]['InnerTree']['{ 0; }']
+lines = [rhino3dm.CommonObject.Decode(json.loads(item['data'])) for item in branch]
+
+# create a 3dm file with results
+model = rhino3dm.File3dm()
+for l in lines:
+    model.Objects.AddCurve(l) # they're actually LineCurves...
+
+model.Write('workshop_step5.3dm')
