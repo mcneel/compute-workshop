@@ -26,9 +26,13 @@ output = gh.EvaluateDefinition('workshop_step5.ghx', trees)
 branch = output['values'][0]['InnerTree']['{ 0; }']
 lines = [rhino3dm.CommonObject.Decode(json.loads(item['data'])) for item in branch]
 
+filename = 'workshop_step5.3dm'
+
+print('Writing {} lines to {}'.format(len(lines), filename))
+
 # create a 3dm file with results
 model = rhino3dm.File3dm()
 for l in lines:
     model.Objects.AddCurve(l) # they're actually LineCurves...
 
-model.Write('workshop_step5.3dm')
+model.Write(filename)
